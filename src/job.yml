@@ -14,7 +14,7 @@ outputs:
   metrics_output:
     type: uri_folder
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
-compute: azureml:aml-cluster
+compute: azureml:cluster1
 experiment_name: diabetes-training
 display_name: diabetes-train-command
 description: diabetes training job
