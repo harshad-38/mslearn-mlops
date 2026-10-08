@@ -5,16 +5,19 @@ command: >-
   --training_data ${{inputs.training_data}}
   --reg_rate ${{inputs.reg_rate}}
   --metrics_output ${{outputs.metrics_output}}
+  --model_output ${{outputs.model_output}}
 inputs:
   training_data:
-    type: uri_file
-    path: azureml:diabetes-data@latest
-  reg_rate: 0.02
+    type: uri_folder
+    path: azureml:diabetes-dev-folder@latest
+  reg_rate: 0.01
 outputs:
   metrics_output:
     type: uri_folder
+  model_output:
+    type: mlflow_model
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
-compute: azureml:cluster1
+compute: azureml:aml-cluster
 experiment_name: diabetes-training
 display_name: diabetes-train-command
 description: diabetes training job

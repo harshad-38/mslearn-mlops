@@ -2,12 +2,23 @@ name: Train model in dev
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/train-model-parameters.py'
+      - 'src/job.yml'
 
 permissions:
   contents: read
   pull-requests: write
+  id-token: write
 
 jobs:
+  #env is for env variables and envrionment is for defining which environemnt to deploy this workflow
+  env:
+    RG_NAME: ${{vars.RESOURCE_GROUP}}
+    WS_NAME: ${{vars.WORKSPACE_NAME}}
   train-dev:
     runs-on: ubuntu-latest
     environment: dev
@@ -19,7 +30,9 @@ jobs:
       - name: Sign in to Azure
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.OIDC_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.OIDC_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.OIDC_AZURE_SUBSCRIPTION_ID }}
 
       - name: Install Azure ML CLI
         run: |
@@ -28,13 +41,11 @@ jobs:
       - name: Detect Azure ML workspace
         id: detect
         run: |
-          RG_NAME=$(az group list --query "[?starts_with(name,'rg-ai300-l')].name | [0]" -o tsv)
           if [ -z "$RG_NAME" ]; then
             echo "No resource group starting with rg-ai300-l found." >&2
             exit 1
           fi
 
-          WS_NAME=$(az ml workspace list --resource-group "$RG_NAME" --query "[?starts_with(name,'mlw-ai300-l')].name | [0]" -o tsv)
           if [ -z "$WS_NAME" ]; then
             echo "No workspace starting with mlw-ai300-l found in $RG_NAME." >&2
             exit 1
