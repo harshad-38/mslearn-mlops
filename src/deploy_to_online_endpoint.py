@@ -52,7 +52,7 @@ def ensure_endpoint(ml_client: MLClient, endpoint_name: str) -> ManagedOnlineEnd
         endpoint = ManagedOnlineEndpoint(
             name=endpoint_name,
             description="Online endpoint for MLflow diabetes model",
-            auth_mode="key",
+            auth_mode="key"
         )
         return ml_client.online_endpoints.begin_create_or_update(endpoint).result()
 
@@ -66,13 +66,14 @@ def create_or_update_deployment(
         path="./model",
         type=AssetTypes.MLFLOW_MODEL,
         description="MLflow diabetes classification model",
+        version = "100"
     )
 
     deployment = ManagedOnlineDeployment(
         name=deployment_name,
         endpoint_name=endpoint_name,
         model=model,
-        instance_type="Standard_D2as_v4",
+        instance_type="Standard_F2s_v2",
         instance_count=1,
         data_collector=get_data_collector(),
     )
