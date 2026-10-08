@@ -65,19 +65,67 @@ jobs:
           az ml job create \
             -f src/job.yml \
             --name "$JOB_NAME" \
-            --set inputs.training_data.path=azureml:diabetes-dev-folder@latest \
-            --stream | tee training_output.log
+            --set inputs.training_data.path=azureml:diabetes-dev-folder@latest
 
-      - name: Extract dev metrics from logs
+          echo "JOB_NAME=$JOB_NAME" >> "$GITHUB_OUTPUT"
+          
+      - name: Wait for training job
+        run: |
+          az ml job show \
+            --name "${{ steps.train.outputs.JOB_NAME }}" \
+            --resource-group "$RG_NAME" \
+            --workspace-name "$WS_NAME" \
+            --query status \
+            --output tsv
+
+          while true; do
+            STATUS=$(az ml job show \
+              --name "${{ steps.train.outputs.JOB_NAME }}" \
+              --resource-group "$RG_NAME" \
+              --workspace-name "$WS_NAME" \
+              --query status \
+              --output tsv)
+
+            echo "Job status: $STATUS"
+
+            case "$STATUS" in
+              Completed)
+                break
+                ;;
+              Failed|Canceled|Canceling)
+                echo "Training job failed with status: $STATUS"
+                exit 1
+                ;;
+              *)
+                sleep 20
+                ;;
+            esac
+          done
+
+      - name: Download Azure ML job logs
+        run: |
+          mkdir -p azureml-job-files
+
+          az ml job download \
+            --name "${{ steps.train.outputs.JOB_NAME }}" \
+            --resource-group "$RG_NAME" \
+            --workspace-name "$WS_NAME" \
+            --download-path azureml-job-files
+
+      - name: Extract dev metrics
         id: parse-metrics
         run: |
-          if [ ! -f training_output.log ]; then
-            echo "No training_output.log found to parse metrics." >&2
+          STD_LOG=$(find azureml-job-files -path "*/user_logs/std_log.txt" -type f | head -n 1)
+
+          if [ -z "$STD_LOG" ]; then
+            echo "std_log.txt not found"
             exit 1
           fi
 
-          ACC=$(grep -o "Accuracy: .*" training_output.log | tail -n 1 | awk '{print $2}') || true
-          AUC=$(grep -o "AUC: .*" training_output.log | tail -n 1 | awk '{print $2}') || true
+          echo "Using log: $STD_LOG"
+
+          ACC=$(grep "Accuracy:" "$STD_LOG" | tail -n 1 | awk '{print $2}')
+          AUC=$(grep "AUC:" "$STD_LOG" | tail -n 1 | awk '{print $2}')
 
           echo "Dev accuracy: $ACC"
           echo "Dev AUC: $AUC"
