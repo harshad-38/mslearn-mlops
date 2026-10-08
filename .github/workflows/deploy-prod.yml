@@ -8,6 +8,11 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
+  id-token: write
+
+env:
+    RG_NAME: ${{vars.RESOURCE_GROUP}}
+    WS_NAME: ${{vars.WORKSPACE_NAME}}
 
 jobs:
   deploy-prod:
@@ -36,7 +41,10 @@ jobs:
       - name: Sign in to Azure
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          with:
+          client-id: ${{ secrets.OIDC_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.OIDC_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.OIDC_AZURE_SUBSCRIPTION_ID }}
 
       - name: Install Azure ML CLI
         run: |
@@ -45,13 +53,11 @@ jobs:
       - name: Detect Azure ML workspace
         id: detect
         run: |
-          RG_NAME=$(az group list --query "[?starts_with(name,'rg-ai300-l')].name | [0]" -o tsv)
           if [ -z "$RG_NAME" ]; then
             echo "No resource group starting with rg-ai300-l found." >&2
             exit 1
           fi
 
-          WS_NAME=$(az ml workspace list --resource-group "$RG_NAME" --query "[?starts_with(name,'mlw-ai300-l')].name | [0]" -o tsv)
           if [ -z "$WS_NAME" ]; then
             echo "No workspace starting with mlw-ai300-l found in $RG_NAME." >&2
             exit 1
