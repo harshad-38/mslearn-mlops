@@ -8,6 +8,7 @@ on:
     paths:
       - 'src/train-model-parameters.py'
       - 'src/job.yml'
+      - '.github/workflows/train-dev.yml'
 
 permissions:
   contents: read
@@ -68,7 +69,7 @@ jobs:
             --set inputs.training_data.path=azureml:diabetes-dev-folder@latest
 
           echo "JOB_NAME=$JOB_NAME" >> "$GITHUB_OUTPUT"
-          
+
       - name: Wait for training job
         run: |
           az ml job show \
