@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 
 def main(args):
     # read data
+    mlflow.sklearn.autolog()
     df = get_data(args.training_data)
 
     # split data
@@ -20,6 +21,8 @@ def main(args):
 
     # train model
     model = train_model(args.reg_rate, X_train, X_test, y_train, y_test)
+
+    mlflow.sklearn.save_model(model, args.model_output)
 
     # evaluate model
     metrics = eval_model(model, X_test, y_test)
@@ -111,6 +114,7 @@ def parse_args():
                         type=float, default=0.01)
     parser.add_argument("--metrics_output", dest='metrics_output',
                         type=str, default=None)
+    parser.add_argument("--model_output", dest = 'model', type=str, default='model')
 
     # parse args
     args = parser.parse_args()
