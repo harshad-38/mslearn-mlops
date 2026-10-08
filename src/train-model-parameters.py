@@ -107,6 +107,7 @@ def parse_args():
     # setup arg parser
     parser = argparse.ArgumentParser()
 
+    #Here dest means the destination argument used in this script
     # add arguments
     parser.add_argument("--training_data", dest='training_data',
                         type=str)
@@ -114,7 +115,7 @@ def parse_args():
                         type=float, default=0.03)
     parser.add_argument("--metrics_output", dest='metrics_output',
                         type=str, default=None)
-    parser.add_argument("--model_output", dest = 'model', type=str, default='model')
+    parser.add_argument("--model_output", dest = 'model_output', type=str, default=None)
 
     # parse args
     args = parser.parse_args()
