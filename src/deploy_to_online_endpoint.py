@@ -29,8 +29,8 @@ def parse_args():
     parser.add_argument("--subscription-id", dest="subscription_id", required=True)
     parser.add_argument("--resource-group", dest="resource_group", required=True)
     parser.add_argument("--workspace", dest="workspace", required=True)
-    parser.add_argument("--endpoint-name", dest="endpoint_name", default="diabetes-endpoint")
-    parser.add_argument("--deployment-name", dest="deployment_name", default="blue")
+    parser.add_argument("--endpoint-name", dest="endpoint_name", default="heart-endpoint")
+    parser.add_argument("--deployment-name", dest="deployment_name", default="blue-origin")
 
     return parser.parse_args()
 
@@ -51,7 +51,7 @@ def ensure_endpoint(ml_client: MLClient, endpoint_name: str) -> ManagedOnlineEnd
     except ResourceNotFoundError:
         endpoint = ManagedOnlineEndpoint(
             name=endpoint_name,
-            description="Online endpoint for MLflow diabetes model",
+            description="Online endpoint for MLflow heart model",
             auth_mode="key"
         )
         return ml_client.online_endpoints.begin_create_or_update(endpoint).result()
@@ -65,7 +65,7 @@ def create_or_update_deployment(
     model = Model(
         path="./model",
         type=AssetTypes.MLFLOW_MODEL,
-        description="MLflow diabetes classification model"
+        description="MLflow heart classification model"
     )
 
     deployment = ManagedOnlineDeployment(
